@@ -1,0 +1,207 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Outfit:wght@100..900&display=swap');
+
+@import "tailwindcss";
+
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+
+/* =========================
+   THEME VARIABLES
+========================= */
+
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --card-bg: rgba(255,255,255,0.7);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  --border-color: rgba(15,23,42,0.08);
+
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+
+  --shadow:
+    0 10px 30px rgba(15,23,42,0.08);
+
+  --glass-blur: blur(18px);
+}
+
+.dark {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --card-bg: rgba(15,23,42,0.7);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+
+  --border-color: rgba(255,255,255,0.08);
+
+  --accent: #818cf8;
+  --accent-hover: #6366f1;
+
+  --shadow:
+    0 10px 40px rgba(0,0,0,0.45);
+
+  --glass-blur: blur(18px);
+}
+
+/* =========================
+   BASE
+========================= */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+h1,
+h2,
+h3,
+.logo-font {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* =========================
+   GLASS CARD
+========================= */
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+
+  border-radius: 24px;
+}
+
+/* =========================
+   AUTH BUTTON
+========================= */
+
+.auth-btn {
+  width: 100%;
+  border: none;
+
+  padding: 14px;
+
+  border-radius: 14px;
+
+  background: var(--accent);
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.auth-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+.auth-input {
+  width: 100%;
+
+  padding: 14px 16px;
+
+  border-radius: 14px;
+
+  border: 1px solid var(--border-color);
+
+  background: transparent;
+
+  color: var(--text-primary);
+
+  outline: none;
+
+  transition: all 0.25s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--accent);
+}
+
+/* =========================
+   NUMBER INPUT FIX
+========================= */
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100,100,100,0.35);
+}
+
+html.dark {
+  background: #020617;
+  color: white;
+}
+
+html.light {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+}

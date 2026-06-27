@@ -236,8 +236,6 @@ Computer Science Undergraduate
 
 GitHub: https://github.com/shreya801994
 
-LinkedIn: *(Add your LinkedIn URL here)*
-
 ---
 
 # 📄 License

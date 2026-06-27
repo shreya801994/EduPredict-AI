@@ -205,18 +205,6 @@ https://archive.ics.uci.edu/ml/datasets/student+performance
 
 ---
 
-# 📷 Screenshots
-
-Add screenshots here after deployment.
-
-- Home Dashboard
-- Analytics Dashboard
-- Quiz Generator
-- Study Roadmap
-- AI Tutor
-
----
-
 # 🔮 Future Improvements
 
 - PDF-based quiz generation

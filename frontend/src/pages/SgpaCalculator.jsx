@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const SgpaCalculator = () => {
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1`;
+
   const [courses, setCourses] = useState([
     {
       name: "",
@@ -77,13 +79,13 @@ const SgpaCalculator = () => {
       };
 
       // 1. Submit logs into backend database
-      await axios.post('http://127.0.0.1:8000/api/v1/profile/submit', payload, {
+      await axios.post( `${API_BASE_URL}/profile/submit`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // 2. Fetch the analytical results payload
       const response = await axios.get(
-      `http://127.0.0.1:8000/api/v1/predict/metrics/${studentId}`,
+      `${API_BASE_URL}/predict/metrics/${studentId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

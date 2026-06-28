@@ -7,6 +7,7 @@ import { quizAnalyticsService } from "../api/quizAnalyticsService";
 export default function QuizArena() {
   const { theme } = useTheme();
   const darkMode = theme === "dark";
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [difficulty, setDifficulty] = useState("medium");
@@ -82,7 +83,7 @@ const loadAnalytics = async () => {
 
     const uploadResponse =
       await fetch(
-        "http://127.0.0.1:8000/api/v1/materials/upload",
+      `${API_BASE_URL}/materials/upload`,
         {
           method: "POST",
           headers: {
@@ -101,7 +102,7 @@ const loadAnalytics = async () => {
 
     const quizResponse =
       await fetch(
-        "http://127.0.0.1:8000/api/v1/quizzes/generate",
+        `${API_BASE_URL}/quizzes/generate`,
         {
           method: "POST",
           headers: {

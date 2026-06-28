@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 
 export default function QuizAttempt() {
   const { quizId } = useParams();
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1`;
 
   const navigate = useNavigate();
 
@@ -26,7 +27,7 @@ export default function QuizAttempt() {
         localStorage.getItem("token");
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/v1/quizzes/${quizId}`,
+        `${API_BASE_URL}/quizzes/${quizId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,7 +81,7 @@ export default function QuizAttempt() {
       localStorage.getItem("token");
 
     const response = await fetch(
-      "http://127.0.0.1:8000/api/v1/attempts/submit",
+        `${API_BASE_URL}/attempts/submit`,
       {
         method: "POST",
         headers: {

@@ -1,105 +1,133 @@
-# backend/app/utils/llm_client.py
 import os
 import json
-import requests
+import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Robust absolute path mapping: Moves up 2 parent directories (utils -> app -> backend) to target .env precisely
+# Load local .env when running locally.
+# On Render, environment variables are injected automatically.
 env_path = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=env_path)
 
+
 class LLMClient:
     """
-    Vendor-agnostic communication bridge for quiz generation.
-    Orchestrates an automated dual-tier fallback sequence:
-    Tier 1 (Primary): Native Google Gemini Cloud API(when available)
-    Tier 2 (Fallback): Local Ollama Engine Node
+    Gemini-powered LLM client for production.
+
+    Features:
+    - Automatic retry on temporary Gemini failures.
+    - Strict JSON validation.
+    - No Ollama dependency in production.
     """
+
     def __init__(self):
         self.gemini_key = os.getenv("GEMINI_API_KEY")
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-        self.ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/api/chat")
-        self.ollama_model = os.getenv("OLLAMA_MODEL", "mistral")
-        
-        self.gemini_client = None
-        if self.gemini_key:
-            self.gemini_client = genai.Client(api_key=self.gemini_key)
+        self.gemini_model = os.getenv(
+            "GEMINI_MODEL",
+            "gemini-2.5-flash",
+        )
 
-    def generate_quiz_json(self, system_prompt: str, user_prompt: str) -> str:
+        if not self.gemini_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY environment variable is not configured."
+            )
+
+        self.gemini_client = genai.Client(api_key=self.gemini_key)
+
+    def generate_quiz_json(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> str:
         """
-        Dispatches prompts down the redundancy chain. Enforces and validates 
-        strict raw JSON response strings before returning them to the caller.
+        Generates structured JSON from Gemini.
+
+        Retries automatically if Gemini is temporarily unavailable.
         """
-        raw_response = None
-        
-        # TIER 1: Native Google Gemini Cloud Execution
-        if self.gemini_client:
+
+        last_error = None
+
+        for attempt in range(3):
             try:
-                raw_response = self._call_gemini(system_prompt, user_prompt)
-            except Exception as cloud_err:
-                print(f"⚠️ Tier 1 (Gemini Cloud) Fault Encountered: {cloud_err}")
-                print("🔄 Automatically cascading down to Tier 2 (Local Edge Fallback)...")
+                print(f"🚀 Gemini attempt {attempt + 1}/3")
 
-        # TIER 2: Local Host Engine Execution (Offline Local Fail-safe)
-        if not raw_response:
-            raw_response = self._call_ollama(system_prompt, user_prompt)
+                raw_response = self._call_gemini(
+                    system_prompt,
+                    user_prompt,
+                )
 
-        self._validate_json_response(raw_response)
-        return raw_response
+                self._validate_json_response(raw_response)
 
-    def _call_gemini(self, system: str, user: str) -> str:
-        print(f"📡 Provider Routing: [ TIER 1 - NATIVE GOOGLE GEMINI CLOUD API ({self.gemini_model}) ]")
-        
+                return raw_response
+
+            except Exception as e:
+                last_error = e
+
+                print(
+                    f"⚠️ Gemini attempt {attempt + 1} failed:\n{e}"
+                )
+
+                if attempt < 2:
+                    print("⏳ Waiting 2 seconds before retry...")
+                    time.sleep(2)
+
+        raise RuntimeError(
+            f"Gemini service is temporarily unavailable.\n\n{last_error}"
+        )
+
+    def _call_gemini(
+        self,
+        system: str,
+        user: str,
+    ) -> str:
+
+        print(
+            f"📡 Using Gemini model: {self.gemini_model}"
+        )
+
         response = self.gemini_client.models.generate_content(
             model=self.gemini_model,
             contents=user,
             config=types.GenerateContentConfig(
                 system_instruction=system,
-                temperature=0.2,       
-                response_mime_type="application/json"  
+                temperature=0.2,
+                response_mime_type="application/json",
             ),
         )
+
         if not response.text:
-            raise ValueError("Received an empty content return block from Gemini.")
+            raise RuntimeError(
+                "Gemini returned an empty response."
+            )
+
         return response.text.strip()
 
-    def _call_ollama(self, system: str, user: str) -> str:
-        print(f"📡 Provider Routing: [ TIER 2 - LOCAL OLLAMA EDGE NODE ({self.ollama_model}) ]")
-        payload = {
-            "model": self.ollama_model,
-            "format": "json",    
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user}
-            ],
-            "options": {"temperature": 0.2},
-            "stream": False
-        }
-        try:
-            response = requests.post(self.ollama_url, json=payload, timeout=60)
-            response.raise_for_status()
-            return response.json()["message"]["content"].strip()
-        except Exception as err:
-            raise RuntimeError(f"Local Ollama environment is unavailable or model is unpulled: {str(err)}")
+    def _validate_json_response(self, raw_text: str):
 
-    def _validate_json_response(self, raw_text: str) -> None:
         try:
             json.loads(raw_text)
-        except json.JSONDecodeError as decode_err:
-            print("\n❌ CRITICAL PARSING ERROR: Malformed execution block returned from LLM pipeline:")
-            print(raw_text)
-            print("="*50)
-            raise RuntimeError(f"Structural validation failure: Output is not valid JSON. Details: {decode_err}")
-    
-    def generate_structured_response(self, system_prompt: str, user_prompt: str) -> str:
-        """
-        Exposed entrypoint for the evaluation grading engine. 
-        Reuses your established, internal dual-tier fallback execution chain seamlessly.
-        """
 
-        return self.generate_quiz_json(system_prompt, user_prompt)
+        except json.JSONDecodeError as e:
+
+            print("\n❌ Invalid JSON returned by Gemini:")
+            print(raw_text)
+
+            raise RuntimeError(
+                f"Gemini returned malformed JSON.\n{e}"
+            )
+
+    def generate_structured_response(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> str:
+        return self.generate_quiz_json(
+            system_prompt,
+            user_prompt,
+        )
+
 
 llm_client = LLMClient()
